@@ -1,0 +1,29 @@
+name: ClashOfBlocks
+main: io.github.reconsolidated.clashofblocks.ClashOfBlocks
+version: 1.0
+api-version: 1.16
+commands:
+  help:
+    description: ClashOfBlocks help command.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  spawnzombie:
+    description: ClashOfBlocks spawn zombie.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  spawnnpc:
+    description: ClashOfBlocks spawn npc.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  clearzombiesmove:
+    description: ClashOfBlocks spawn npc.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  movezombies:
+    description: ClashOfBlocks spawn npc.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  createstructure:
+    description: ClashOfBlocks create structure.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
