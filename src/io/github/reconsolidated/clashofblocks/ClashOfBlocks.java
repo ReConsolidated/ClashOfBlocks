@@ -1,14 +1,17 @@
 package io.github.reconsolidated.clashofblocks;
 
-import io.github.reconsolidated.clashofblocks.Listeners.BlockBreakListener;
-import io.github.reconsolidated.clashofblocks.Listeners.BlockPlaceListener;
-import io.github.reconsolidated.clashofblocks.Listeners.EntityTargetLivingEntityListener;
-import io.github.reconsolidated.clashofblocks.Listeners.PlayerInteractListener;
+import io.github.reconsolidated.clashofblocks.ClashPlayer.ClashPlayer;
+import io.github.reconsolidated.clashofblocks.ClashVillage.ClashVillageState;
+import io.github.reconsolidated.clashofblocks.Listeners.*;
+import io.github.reconsolidated.clashofblocks.Utils.ConfigFileManagement;
+import io.github.reconsolidated.clashofblocks.Village.Structure;
 import io.github.reconsolidated.clashofblocks.customzombie.CustomZombie;
 import net.minecraft.server.v1_16_R2.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.v1_16_R2.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
@@ -18,30 +21,52 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.ArrayList;
 
 
 public class ClashOfBlocks extends JavaPlugin implements Listener {
     private ArrayList<CustomZombie> zombies = new ArrayList<CustomZombie>();
 
+    private ArrayList<ClashPlayer> activeClashPlayers = new ArrayList<>();
+
     public Location gPickaxeLeft;
     public Location gPickaxeRight;
+
+    static {
+        ConfigurationSerialization.registerClass(ClashVillageState.class, "ClashVillageState");
+    }
 
     @Override
     public void onEnable() {
         Commands commandsPlugin = new Commands(this);
 
-
         new BlockPlaceListener(this);
         new PlayerInteractListener(this);
         new BlockBreakListener(this);
-    }
-
-    public void createStructure(Player player, String name){
-
+        new PlayerJoinListener(this);
 
     }
 
+
+    public void showClashPlayers(){
+        for (int i = 0; i<activeClashPlayers.size(); i++){
+            Bukkit.broadcastMessage(activeClashPlayers.get(i).toString());
+        }
+    }
+
+    public void addClashPlayer(ClashPlayer cp){
+        activeClashPlayers.add(cp);
+    }
+
+    public ClashPlayer getClashPlayer(Player player){
+        for (int i = 0; i<activeClashPlayers.size(); i++){
+            if (activeClashPlayers.get(i).getPlayer().equals(player)){
+                return activeClashPlayers.get(i);
+            }
+        }
+        return null;
+    }
     public void moveAllZombiesToLocation(Location location){
         for (int i = 0; i<zombies.size(); i++){
             zombies.get(i).setCurrentDestiny(location);

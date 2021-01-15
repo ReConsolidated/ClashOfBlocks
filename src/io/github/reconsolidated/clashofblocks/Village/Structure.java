@@ -1,59 +1,150 @@
 package io.github.reconsolidated.clashofblocks.Village;
 
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.function.operation.Operation;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.transform.AffineTransform;
+import com.sk89q.worldedit.math.transform.Transform;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.session.ClipboardHolder;
+import com.sk89q.worldedit.session.PasteBuilder;
+import com.sk89q.worldedit.world.World;
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
-import io.github.reconsolidated.clashofblocks.Utils.ConfigFileManagement;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Structure {
-    private ArrayList<Block> structureBlocks;
 
-    private Location loc1, loc2, middle;
     private String name;
 
-    public Structure(Location loc1, Location loc2, Location middle, String name, ArrayList<Block> blocks){
-        this.loc1 = loc1;
-        this.loc2 = loc2;
-        this.middle = middle;
+    private ClashOfBlocks plugin;
+
+    private BlockVector3 dimensions;
+    private Region region;
+    private Location playerLocationWhenBuilding;
+
+    public Structure(ClashOfBlocks plugin, String name, Player player){
         this.name = name;
-        this.structureBlocks = blocks;
+        this.plugin = plugin;
+        build(player);
     }
 
-    public static void createStructure(ClashOfBlocks plugin, Player player, String name, Location loc1, Location loc2, Location middle){
-        ArrayList<Block> blocks = new ArrayList<Block>();
-        for (int i = Math.min(loc1.getBlockX(), loc2.getBlockX()); i<= Math.max(loc1.getBlockX(), loc2.getBlockX()); i++) {
-            for (int j = Math.min(loc1.getBlockY(), loc2.getBlockY()); j <= Math.max(loc1.getBlockY(), loc2.getBlockY()); j++) {
-                for (int k = Math.min(loc1.getBlockZ(), loc2.getBlockZ()); k <= Math.max(loc1.getBlockZ(), loc2.getBlockZ()); k++) {
-                    blocks.add(loc1.getWorld().getBlockAt(i, j, k));
-                }
+    public void destroy(Player player){
+        Bukkit.broadcastMessage(dimensions.toString());
+        Bukkit.broadcastMessage(region.toString());
+        region.getBoundingBox().forEach(blockVector -> {
+            Bukkit.broadcastMessage(blockVector.toString());
+            player.getWorld().getBlockAt(blockVector.getX(), blockVector.getY(), blockVector.getZ()).setType(Material.AIR);
+        });
+
+    }
+
+    private Clipboard loadSchematic(Player player){
+        Location location = player.getLocation();
+        if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null){
+            WorldEditPlugin worldEditPlugin = (WorldEditPlugin) Bukkit.getPluginManager().getPlugin("WorldEdit");
+            File schematic = new File(worldEditPlugin.getDataFolder() + File.separator + "/schematics/" + name + ".schem");
+            try{
+                ClipboardFormat format = ClipboardFormats.findByFile(schematic);
+                ClipboardReader reader = format.getReader(new FileInputStream(schematic));
+                Clipboard clipboard = reader.read();
+                return clipboard;
+            }catch(IOException e){
+                e.printStackTrace();
             }
         }
+        else{
+            player.sendMessage(ChatColor.RED + "WorldEdit is not installed on this server, couldn't load schematic");
+        }
+        return null;
 
-        FileConfiguration structureConfig = ConfigFileManagement.getCustomConfig(plugin, name + ".yml");
-        structureConfig.set("blocks", blocks);
-        structureConfig.set("loc1", loc1);
-        structureConfig.set("loc2", loc2);
-        structureConfig.set("middle", middle);
     }
 
-    public static Structure loadBlocks(ClashOfBlocks plugin, String name){
-        FileConfiguration structureConfig = ConfigFileManagement.getCustomConfig(plugin, name + ".yml");
-        Location loc1 = (Location) structureConfig.get("loc1");
-        Location loc2 = (Location) structureConfig.get("loc2");
-        Location mid = (Location) structureConfig.get("middle");
-        ArrayList<Block> blocks = (ArrayList<Block>) structureConfig.get("blocks");
+    public void build(Player player) {
+        World world = new BukkitWorld(player.getWorld());
+        try (EditSession editSession = WorldEdit.getInstance().newEditSession(world)) {
+            Bukkit.broadcastMessage(editSession.getMaximumPoint().toString());
+            Clipboard cb = loadSchematic(player);
+            if (cb == null){
+                Bukkit.broadcastMessage("Couldn't load schematic");
+                return;
+            }
+            ClipboardHolder cph = new ClipboardHolder(cb);
+            Bukkit.broadcastMessage(cph.getClipboard().getDimensions().toString());
+            Transform transform = new AffineTransform();
 
-        if (loc1 == null || loc2 == null || mid == null || blocks == null){
-            return null;
+            this.region = cph.getClipboard().getRegion().clone();
+            Bukkit.broadcastMessage("Before shift: ");
+            Bukkit.broadcastMessage(region.getMinimumPoint().toString());
+            Bukkit.broadcastMessage(region.getMaximumPoint().toString());
+
+
+            double a1 = player.getLocation().getDirection().angle(new Vector(0, 0, -1)); // 270
+            double a2 = player.getLocation().getDirection().angle(new Vector(1, 0, 0)); // 180
+            double a3 = player.getLocation().getDirection().angle(new Vector(0, 0, 1)); // 90
+            double a4 = player.getLocation().getDirection().angle(new Vector(-1, 0, 0)); // 360
+
+            double smallest = Math.min(a1, Math.min(a2, Math.min(a3, a4)));
+
+            if (smallest == a1) { // 90 degrees
+                transform = new AffineTransform().rotateY(270);
+            }
+            if (smallest == a2){ // 180 degrees
+                transform = new AffineTransform().rotateY(180);
+            }
+            if (smallest == a3){ // 270 degrees
+                transform = new AffineTransform().rotateY(90);
+            }
+
+            cph.setTransform(transform);
+            Operation operation = cph
+                    .createPaste(editSession)
+                    .to(BlockVector3.at(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ()))
+                    .ignoreAirBlocks(false)
+                    .build();
+
+            this.dimensions = cph.getClipboard().getDimensions();
+
+
+            Bukkit.broadcastMessage("Player location: ");
+            Bukkit.broadcastMessage(player.getLocation().toString());
+            Bukkit.broadcastMessage("Region center location: ");
+            Bukkit.broadcastMessage(region.getCenter().toString());
+
+            this.region.shift(BlockVector3.at(
+                    player.getLocation().getX() - region.getCenter().getX(),
+                    player.getLocation().getY() - region.getCenter().getY(),
+                    player.getLocation().getZ() - region.getCenter().getZ()));
+
+            Bukkit.broadcastMessage("After shift: ");
+            Bukkit.broadcastMessage(region.getMinimumPoint().toString());
+            Bukkit.broadcastMessage(region.getMaximumPoint().toString());
+            Operations.complete(operation);
+        } catch (WorldEditException e) {
+            e.printStackTrace();
         }
+    }
 
-        return new Structure(loc1, loc2, mid, name, blocks);
+    public String getName(){
+        return this.name;
     }
 }

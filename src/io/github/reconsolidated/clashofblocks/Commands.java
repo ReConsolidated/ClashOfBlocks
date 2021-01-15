@@ -29,7 +29,7 @@ public class Commands implements CommandExecutor {
         String commandName = command.getName().toLowerCase();
 
         if (commandName.equals("help")){
-            sender.sendMessage("This is help command. It will be implemented later");
+            plugin.showClashPlayers();
         }
 
         if (commandName.equals("spawnzombie")){
@@ -56,13 +56,6 @@ public class Commands implements CommandExecutor {
             plugin.clearZombiesDestiny();
         }
 
-        if (commandName.equals("createstructure")){
-            Player player = (Player) sender;
-            if (strings.length > 0){
-                String name = strings[0];
-                plugin.createStructure(player, name);
-            }
-        }
 
 
         return false;
