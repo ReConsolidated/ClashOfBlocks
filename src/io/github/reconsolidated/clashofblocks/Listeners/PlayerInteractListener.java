@@ -40,17 +40,23 @@ public class PlayerInteractListener implements Listener {
 
                     break;
                 case CLOCK:
-                    Structure baseStructure = new Structure(this.plugin, "HOUSE", event.getPlayer());
-                    ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
-                    if (cp != null){
-                        cp.addStructure(baseStructure);
+                    if (((int) event.getPlayer().getLocation().getY()) != 50){
+                        event.getPlayer().sendMessage("You have to stand on your Village level to build!");
+                    }
+                    else{
+                        Structure baseStructure = new Structure(this.plugin, "HOUSE", event.getPlayer());
+                        ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
+                        if (cp != null){
+                            cp.addStructure(baseStructure);
+                        }
                     }
                     break;
                 case DIAMOND_HOE:
-                    cp = plugin.getClashPlayer(event.getPlayer());
+                    ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
                     if (cp != null && cp.getVillageState().getStructureByName("HOUSE") != null){
-                        cp.getVillageState().getStructureByName("HOUSE").destroy(event.getPlayer());
+                        cp.getVillageState().removeStructureByName("HOUSE", event.getPlayer());
                     }
+
                     break;
             }
         }

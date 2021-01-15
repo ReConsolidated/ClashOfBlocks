@@ -4,6 +4,7 @@ import io.github.reconsolidated.clashofblocks.Village.Structure;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +26,16 @@ public class ClashVillageState implements ConfigurationSerializable {
 
     public void setPalaceLocation(Location palaceLocation){
         this.palaceLocation = palaceLocation;
+    }
+
+    public void removeStructureByName(String name, Player player){
+        Structure structure = getStructureByName("HOUSE");
+        structure.destroy(player);
+        for (int i = 0; i<structures.size(); i++){
+            if (structures.get(i).equals(structure)){
+                structures.remove(structure);
+            }
+        }
     }
 
     public Structure getStructureByName(String name){

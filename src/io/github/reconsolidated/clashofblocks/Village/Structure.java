@@ -38,24 +38,34 @@ public class Structure {
 
     private ClashOfBlocks plugin;
 
-    private BlockVector3 dimensions;
     private Region region;
-    private Location playerLocationWhenBuilding;
 
     public Structure(ClashOfBlocks plugin, String name, Player player){
         this.name = name;
         this.plugin = plugin;
         build(player);
+
     }
 
     public void destroy(Player player){
-        Bukkit.broadcastMessage(dimensions.toString());
-        Bukkit.broadcastMessage(region.toString());
-        region.getBoundingBox().forEach(blockVector -> {
-            Bukkit.broadcastMessage(blockVector.toString());
-            player.getWorld().getBlockAt(blockVector.getX(), blockVector.getY(), blockVector.getZ()).setType(Material.AIR);
-        });
+        int minX = Math.min(region.getBoundingBox().getPos1().getX(), region.getBoundingBox().getPos2().getX());
+        int minY = Math.min(region.getBoundingBox().getPos1().getY(), region.getBoundingBox().getPos2().getY());
+        int minZ = Math.min(region.getBoundingBox().getPos1().getZ(), region.getBoundingBox().getPos2().getZ());
 
+        int maxX = Math.max(region.getBoundingBox().getPos1().getX(), region.getBoundingBox().getPos2().getX());
+        int maxY = Math.max(region.getBoundingBox().getPos1().getY(), region.getBoundingBox().getPos2().getY());
+        int maxZ = Math.max(region.getBoundingBox().getPos1().getZ(), region.getBoundingBox().getPos2().getZ());
+
+        for (int i = minX; i<=maxX; i++){
+            for (int j = minY; j<=maxY; j++){
+                for (int k = minZ; k<=maxZ; k++){
+                    player.getWorld().getBlockAt(i, j, k).setType(Material.AIR);
+                    if (j == 49){
+                        player.getWorld().getBlockAt(i, j, k).setType(Material.GRASS_BLOCK);
+                    }
+                }
+            }
+        }
     }
 
     private Clipboard loadSchematic(Player player){
@@ -80,23 +90,16 @@ public class Structure {
     }
 
     public void build(Player player) {
+
         World world = new BukkitWorld(player.getWorld());
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(world)) {
-            Bukkit.broadcastMessage(editSession.getMaximumPoint().toString());
             Clipboard cb = loadSchematic(player);
             if (cb == null){
-                Bukkit.broadcastMessage("Couldn't load schematic");
+                Bukkit.broadcastMessage("Couldn't load schematic. Contact the admin of the server.");
                 return;
             }
             ClipboardHolder cph = new ClipboardHolder(cb);
-            Bukkit.broadcastMessage(cph.getClipboard().getDimensions().toString());
             Transform transform = new AffineTransform();
-
-            this.region = cph.getClipboard().getRegion().clone();
-            Bukkit.broadcastMessage("Before shift: ");
-            Bukkit.broadcastMessage(region.getMinimumPoint().toString());
-            Bukkit.broadcastMessage(region.getMaximumPoint().toString());
-
 
             double a1 = player.getLocation().getDirection().angle(new Vector(0, 0, -1)); // 270
             double a2 = player.getLocation().getDirection().angle(new Vector(1, 0, 0)); // 180
@@ -122,26 +125,46 @@ public class Structure {
                     .ignoreAirBlocks(false)
                     .build();
 
-            this.dimensions = cph.getClipboard().getDimensions();
-
-
-            Bukkit.broadcastMessage("Player location: ");
-            Bukkit.broadcastMessage(player.getLocation().toString());
-            Bukkit.broadcastMessage("Region center location: ");
-            Bukkit.broadcastMessage(region.getCenter().toString());
+            this.region = cph.getClipboard().getRegion().clone();
+            BlockVector3 origin = cph.getClipboard().getOrigin();
 
             this.region.shift(BlockVector3.at(
-                    player.getLocation().getX() - region.getCenter().getX(),
-                    player.getLocation().getY() - region.getCenter().getY(),
-                    player.getLocation().getZ() - region.getCenter().getZ()));
+                    player.getLocation().getX() - origin.getX(),
+                    player.getLocation().getY() - origin.getY(),
+                    player.getLocation().getZ() - origin.getZ()));
 
-            Bukkit.broadcastMessage("After shift: ");
-            Bukkit.broadcastMessage(region.getMinimumPoint().toString());
-            Bukkit.broadcastMessage(region.getMaximumPoint().toString());
+            BlockVector3 b1 = this.region.getBoundingBox().getPos1();
+            BlockVector3 b2 = this.region.getBoundingBox().getPos2();
+
+            if (smallest == a1) { // 90 degrees
+                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * -0.5);
+                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * -0.5);
+            }
+            if (smallest == a2){ // 180 degrees
+                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 1);
+                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 1);
+            }
+            if (smallest == a3){ // 270 degrees
+                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 0.5);
+                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 0.5);
+            }
+
+            this.region.getBoundingBox().setPos1(b1);
+            this.region.getBoundingBox().setPos2(b2);
+
             Operations.complete(operation);
         } catch (WorldEditException e) {
             e.printStackTrace();
         }
+    }
+
+    private BlockVector3 rotatePointAround(BlockVector3 block, double centerX, double centerZ, double angle) {
+     //   double angle = -0.5 * Math.PI;
+
+        double rotatedX = (Math.cos(angle) * (block.getX() - centerX) - Math.sin(angle) * (block.getZ() - centerZ) + centerX);
+        double rotatedZ = (Math.sin(angle) * (block.getX() - centerX) + Math.cos(angle) * (block.getZ() - centerZ) + centerZ);
+        block = block.add(BlockVector3.at(rotatedX - block.getX(), 0, rotatedZ - block.getZ()));
+        return block;
     }
 
     public String getName(){
