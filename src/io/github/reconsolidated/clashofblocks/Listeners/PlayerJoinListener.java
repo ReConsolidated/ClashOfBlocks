@@ -24,6 +24,12 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event){
+        /*
+         When a player joins the server we check if he has ever been on the server. If that's the case, we
+         get his data from ClashPlayers.yml file (preferably database in the future) and if not, then we create a new
+         ClashPlayer.
+         Then we tp him to his village's location.
+         */
         FileConfiguration config = ConfigFileManagement.getCustomConfig(plugin, this.plugin.getDataFolder()
                 + File.separator
                 + "ClashPlayers.yml");
@@ -44,6 +50,7 @@ public class PlayerJoinListener implements Listener {
 
         if (isANewPlayer){
             cp = new ClashPlayer(this.plugin, event.getPlayer());
+            Bukkit.broadcastMessage(" Creating a new clashPlayer ");
         }
 
         event.getPlayer().teleport(cp.getVillageLocation());

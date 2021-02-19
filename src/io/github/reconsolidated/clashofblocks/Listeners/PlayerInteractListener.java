@@ -2,9 +2,12 @@ package io.github.reconsolidated.clashofblocks.Listeners;
 
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
 import io.github.reconsolidated.clashofblocks.ClashPlayer.ClashPlayer;
+import io.github.reconsolidated.clashofblocks.Village.STRUCTURES;
 import io.github.reconsolidated.clashofblocks.Village.Structure;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -24,6 +27,9 @@ public class PlayerInteractListener implements Listener {
         ItemStack item = event.getItem();
         if (item != null){
             switch (item.getType()){
+                case BOOK:
+
+                    break;
                 case GOLDEN_PICKAXE:
                     if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)){
                         if (event.getClickedBlock() != null){
@@ -43,20 +49,37 @@ public class PlayerInteractListener implements Listener {
                     if (((int) event.getPlayer().getLocation().getY()) != 50){
                         event.getPlayer().sendMessage("You have to stand on your Village level to build!");
                     }
-                    else{
-                        Structure baseStructure = new Structure(this.plugin, "HOUSE", event.getPlayer());
+                    else {
                         ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
                         if (cp != null){
-                            cp.addStructure(baseStructure);
+                            if (cp.canPlaceStructure(STRUCTURES.HOUSE)){
+                                Structure baseStructure = new Structure("HOUSE", STRUCTURES.HOUSE);
+                                baseStructure.build(event.getPlayer());
+                                cp.addStructure(baseStructure);
+                            }
+                            else{
+                                cp.getPlayer().sendMessage("Structure cannot be placed");
+                            }
                         }
                     }
                     break;
-                case DIAMOND_HOE:
-                    ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
-                    if (cp != null && cp.getVillageState().getStructureByName("HOUSE") != null){
-                        cp.getVillageState().removeStructureByName("HOUSE", event.getPlayer());
+                case IRON_PICKAXE:
+                    if (((int) event.getPlayer().getLocation().getY()) != 50){
+                        event.getPlayer().sendMessage("You have to stand on your Village level to build!");
                     }
-
+                    else{
+                        ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
+                        if (cp != null){
+                            if (cp.canPlaceStructure(STRUCTURES.MINE)){
+                                Structure baseStructure = new Structure("MINE", STRUCTURES.MINE);
+                                baseStructure.build(event.getPlayer());
+                                cp.addStructure(baseStructure);
+                            }
+                            else{
+                                cp.getPlayer().sendMessage("Structure cannot be placed");
+                            }
+                        }
+                    }
                     break;
             }
         }

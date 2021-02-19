@@ -13,6 +13,7 @@ import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.math.transform.Transform;
 import com.sk89q.worldedit.regions.Region;
@@ -20,10 +21,13 @@ import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.session.PasteBuilder;
 import com.sk89q.worldedit.world.World;
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
+import io.github.reconsolidated.clashofblocks.ClashVillage.ClashVillageState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -31,30 +35,120 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Structure {
+
+@SerializableAs("Structure")
+public class Structure implements ConfigurationSerializable  {
 
     private String name;
+    private Location pos1;
+    private Location pos2;
+    private STRUCTURES type;
+    private Location location;
 
-    private ClashOfBlocks plugin;
-
-    private Region region;
-
-    public Structure(ClashOfBlocks plugin, String name, Player player){
+    public Structure(String name, STRUCTURES type){
         this.name = name;
-        this.plugin = plugin;
-        build(player);
+        this.type = type;
+    }
+
+    public Structure(String name, Location pos1, Location pos2, STRUCTURES type, Location location){
+        this.name = name;
+        this.pos1 = pos1;
+        this.pos2 = pos2;
+        this.type = type;
+        this.location = location;
+    }
+
+    public static int getStructureSizeX(STRUCTURES structure){
+        // TODO STRUCTURES sizes from file
+        switch (structure){
+            case HOUSE:
+                return 9;
+            case MINE:
+                return 11;
+            default:
+                return 1;
+        }
+
+    }
+
+    public static int getStructureSizeZ(STRUCTURES structure){
+        // TODO STRUCTURES sizes from file
+        switch (structure){
+            case HOUSE:
+                return 9;
+            case MINE:
+                return 11;
+            default:
+                return 1;
+        }
+
+    }
+
+    public STRUCTURES getType(){
+        return this.type;
+    }
+
+    public boolean isOverridingStructure(STRUCTURES otherStructure, Location location){
+        Location topLeft1 = this.getLocation();
+        Location bottomRight1 = topLeft1.clone().add(getStructureSizeX(this.type)-1, 0, getStructureSizeZ(this.type)-1);
+
+        double a1 = location.getDirection().angle(new Vector(0, 0, -1)); // 270
+        double a2 = location.getDirection().angle(new Vector(1, 0, 0)); // 180
+        double a3 = location.getDirection().angle(new Vector(0, 0, 1)); // 90
+        double a4 = location.getDirection().angle(new Vector(-1, 0, 0)); // 360
+
+        double smallest = Math.min(a1, Math.min(a2, Math.min(a3, a4)));
+
+        int r = getStructureSizeX(otherStructure);
+        Location topLeft2 = null;
+        if (smallest == a1) { // 90 degrees
+            topLeft2 = location.clone().add(-1*r/2, 0, -1*(r)+1);
+        }
+        if (smallest == a2){ // 180 degrees
+            topLeft2 = location.clone().add(0, 0, -1*(r/2));
+        }
+        if (smallest == a3){ // 270 degrees
+            topLeft2 = location.clone().add(r/2 - r + 1, 0, 0);
+        }
+        if (smallest == a4){ //360 degrees
+            topLeft2 = location.clone().add(-1*r+1, 0, r/2 - r + 1);
+        }
+
+        Location bottomRight2 = topLeft2.clone().add(r-1, 0, r-1);
+
+        if (bottomRight2.getBlockX() < topLeft1.getBlockX() || bottomRight1.getBlockX() < topLeft2.getBlockX()){
+            return false;
+        }
+        if (bottomRight2.getBlockZ() < topLeft1.getBlockZ() || bottomRight1.getBlockZ() < topLeft2.getBlockZ()){
+            return false;
+        }
+        return true;
+    }
+
+    public int getWidthX(){
+        return (int) Math.abs(pos1.getX() - pos2.getX());
+    }
+
+    public int getWidthZ(){
+        return (int) Math.abs(pos1.getZ() - pos2.getZ());
+    }
+
+    public Location getLocation(){
+        return this.location;
 
     }
 
     public void destroy(Player player){
-        int minX = Math.min(region.getBoundingBox().getPos1().getX(), region.getBoundingBox().getPos2().getX());
-        int minY = Math.min(region.getBoundingBox().getPos1().getY(), region.getBoundingBox().getPos2().getY());
-        int minZ = Math.min(region.getBoundingBox().getPos1().getZ(), region.getBoundingBox().getPos2().getZ());
+        int minX =(int) Math.min(pos1.getX(), pos2.getX());
+        int minY =(int) Math.min(pos1.getY(), pos2.getY());
+        int minZ =(int) Math.min(pos1.getZ(), pos2.getZ());
 
-        int maxX = Math.max(region.getBoundingBox().getPos1().getX(), region.getBoundingBox().getPos2().getX());
-        int maxY = Math.max(region.getBoundingBox().getPos1().getY(), region.getBoundingBox().getPos2().getY());
-        int maxZ = Math.max(region.getBoundingBox().getPos1().getZ(), region.getBoundingBox().getPos2().getZ());
+        int maxX =(int) Math.max(pos1.getX(), pos2.getX());
+        int maxY =(int) Math.max(pos1.getY(), pos2.getY());
+        int maxZ =(int) Math.max(pos1.getZ(), pos2.getZ());
 
         for (int i = minX; i<=maxX; i++){
             for (int j = minY; j<=maxY; j++){
@@ -125,32 +219,43 @@ public class Structure {
                     .ignoreAirBlocks(false)
                     .build();
 
-            this.region = cph.getClipboard().getRegion().clone();
+            Region region = cph.getClipboard().getRegion().clone();
             BlockVector3 origin = cph.getClipboard().getOrigin();
 
-            this.region.shift(BlockVector3.at(
+            region.shift(BlockVector3.at(
                     player.getLocation().getX() - origin.getX(),
                     player.getLocation().getY() - origin.getY(),
                     player.getLocation().getZ() - origin.getZ()));
 
-            BlockVector3 b1 = this.region.getBoundingBox().getPos1();
-            BlockVector3 b2 = this.region.getBoundingBox().getPos2();
+
+            BlockVector3 b1 = region.getBoundingBox().getPos1();
+            BlockVector3 b2 = region.getBoundingBox().getPos2();
+
 
             if (smallest == a1) { // 90 degrees
-                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * -0.5);
-                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * -0.5);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 0.5);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 0.5);
             }
             if (smallest == a2){ // 180 degrees
-                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 1);
-                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 1);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 1);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 1);
             }
             if (smallest == a3){ // 270 degrees
-                b1 = rotatePointAround(this.region.getBoundingBox().getPos1(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 0.5);
-                b2 = rotatePointAround(this.region.getBoundingBox().getPos2(), region.getCenter().getX(), region.getCenter().getZ(), Math.PI * 0.5);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * -0.5);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * -0.5);
             }
 
-            this.region.getBoundingBox().setPos1(b1);
-            this.region.getBoundingBox().setPos2(b2);
+            pos1 = new Location((org.bukkit.World) region.getWorld(), b1.getX(), b1.getY(), b1.getZ());
+            pos2 = new Location((org.bukkit.World) region.getWorld(), b2.getX(), b2.getY(), b2.getZ());
+
+
+            Bukkit.broadcastMessage(pos1.toString());
+            Bukkit.broadcastMessage(pos2.toString());
+
+            int minX =(int) Math.min(pos1.getX(), pos2.getX());
+            int minZ =(int) Math.min(pos1.getZ(), pos2.getZ());
+
+            location = new Location((org.bukkit.World) region.getWorld(),  minX, pos1.getY(), minZ);
 
             Operations.complete(operation);
         } catch (WorldEditException e) {
@@ -169,5 +274,32 @@ public class Structure {
 
     public String getName(){
         return this.name;
+    }
+
+    @Override
+    public String toString(){
+        return pos1.toString() + " " + pos2.toString();
+    }
+
+
+    @Override
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", name);
+        map.put("pos1", pos1);
+        map.put("pos2", pos2);
+        map.put("type", type.toString());
+        map.put("location", location);
+        return map;
+    }
+
+    public static Structure deserialize(Map<String, Object> map) {
+        STRUCTURES type = STRUCTURES.valueOf((String)map.get("type"));
+        return new Structure(
+                (String)map.get("name"),
+                (Location)map.get("pos1"),
+                (Location)map.get("pos2"),
+                type,
+                (Location)map.get("location"));
     }
 }

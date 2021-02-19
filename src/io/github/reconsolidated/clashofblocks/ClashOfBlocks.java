@@ -35,6 +35,7 @@ public class ClashOfBlocks extends JavaPlugin implements Listener {
 
     static {
         ConfigurationSerialization.registerClass(ClashVillageState.class, "ClashVillageState");
+        ConfigurationSerialization.registerClass(Structure.class, "Structure");
     }
 
     @Override
@@ -45,6 +46,8 @@ public class ClashOfBlocks extends JavaPlugin implements Listener {
         new PlayerInteractListener(this);
         new BlockBreakListener(this);
         new PlayerJoinListener(this);
+        new PlayerInteractEntityListener(this);
+        new PlayerMoveListener(this);
 
     }
 

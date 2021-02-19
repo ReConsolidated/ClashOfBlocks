@@ -3,6 +3,7 @@ package io.github.reconsolidated.clashofblocks.ClashPlayer;
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
 import io.github.reconsolidated.clashofblocks.ClashVillage.ClashVillageState;
 import io.github.reconsolidated.clashofblocks.Utils.ConfigFileManagement;
+import io.github.reconsolidated.clashofblocks.Village.STRUCTURES;
 import io.github.reconsolidated.clashofblocks.Village.Structure;
 
 import org.bukkit.Location;
@@ -34,7 +35,7 @@ public class ClashPlayer {
         this.villageState = new ClashVillageState(villageLocation.clone().add(10, 0, 0));
 
         player.teleport(villageLocation);
-        new Structure(this.plugin, "Village", player);
+        new Structure("Village", STRUCTURES.VILLAGE);
 
         saveClashPlayer();
     }
@@ -46,6 +47,16 @@ public class ClashPlayer {
         this.villageState = villageState;
 
         saveClashPlayer();
+    }
+
+    public boolean canPlaceStructure(STRUCTURES candidateStructure){
+        if (villageState.containsStructure(candidateStructure)){
+            return false;
+        }
+        if (villageState.isOverlappingAnyStructure(candidateStructure, this.player.getLocation())){
+            return false;
+        }
+        return true;
     }
 
     public void saveClashPlayer(){
@@ -87,6 +98,7 @@ public class ClashPlayer {
 
     public void addStructure(Structure structure){
         this.villageState.addStructure(structure);
+        this.saveClashPlayer();
     }
 
     public ClashVillageState getVillageState(){

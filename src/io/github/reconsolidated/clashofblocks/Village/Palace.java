@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 public class Palace {
+
     private Location middleLocation;
     private int level = 0;
 
@@ -13,7 +14,21 @@ public class Palace {
         buildPalace();
     }
 
+    public int getWidth() {
+        return widthFromLevel(level);
+    }
+
     private void buildPalace(){
         middleLocation.clone().add(0, -1, 0).getBlock().setType(Material.COBBLESTONE);
+    }
+
+    private int widthFromLevel(int level){
+        switch(level){
+            case 0,1,2:
+                return 11;
+            default:
+                return 5;
+        }
+
     }
 }
