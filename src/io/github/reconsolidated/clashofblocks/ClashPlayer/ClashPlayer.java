@@ -49,6 +49,10 @@ public class ClashPlayer {
         saveClashPlayer();
     }
 
+    public Structure getStructureWithLocation(Location location){
+        return villageState.getStructureWithLocation(location);
+    }
+
     public boolean canPlaceStructure(STRUCTURES candidateStructure){
         if (villageState.containsStructure(candidateStructure)){
             return false;

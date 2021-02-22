@@ -35,6 +35,15 @@ public class ClashVillageState implements ConfigurationSerializable {
         return false;
     }
 
+    public Structure getStructureWithLocation(Location location){
+        for (int i = 0; i<structures.size(); i++){
+            if (structures.get(i).containsLocation(location)){
+                return structures.get(i);
+            }
+        }
+        return null;
+    }
+
     public boolean isOverlappingAnyStructure(STRUCTURES structure, Location location){
         for (int i = 0; i<structures.size(); i++){
             if(structures.get(i).isOverridingStructure(structure, location)){

@@ -183,6 +183,18 @@ public class Structure implements ConfigurationSerializable  {
 
     }
 
+    public boolean containsLocation(Location location){
+        Location topLeft1 = this.getLocation();
+        Location bottomRight1 = topLeft1.clone().add(getStructureSizeX(this.type)-1, 0, getStructureSizeZ(this.type)-1);
+        if (location.getBlockX() < topLeft1.getBlockX() || bottomRight1.getBlockX() < location.getBlockX()){
+            return false;
+        }
+        if (location.getBlockZ() < topLeft1.getBlockZ() || bottomRight1.getBlockZ() < location.getBlockZ()){
+            return false;
+        }
+        return true;
+    }
+
     public void build(Player player) {
 
         World world = new BukkitWorld(player.getWorld());

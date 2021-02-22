@@ -2,16 +2,19 @@ package io.github.reconsolidated.clashofblocks.Listeners;
 
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
 import io.github.reconsolidated.clashofblocks.ClashPlayer.ClashPlayer;
+import io.github.reconsolidated.clashofblocks.CustomInventory.MenuInventory;
 import io.github.reconsolidated.clashofblocks.Village.STRUCTURES;
 import io.github.reconsolidated.clashofblocks.Village.Structure;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class PlayerInteractListener implements Listener {
@@ -28,7 +31,7 @@ public class PlayerInteractListener implements Listener {
         if (item != null){
             switch (item.getType()){
                 case BOOK:
-
+                    tryToOpenStructureEditMode(event);
                     break;
                 case GOLDEN_PICKAXE:
                     if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)){
@@ -58,10 +61,12 @@ public class PlayerInteractListener implements Listener {
                                 cp.addStructure(baseStructure);
                             }
                             else{
+                                Bukkit.broadcastMessage(cp.getVillageState().toString());
                                 cp.getPlayer().sendMessage("Structure cannot be placed");
                             }
                         }
                     }
+
                     break;
                 case IRON_PICKAXE:
                     if (((int) event.getPlayer().getLocation().getY()) != 50){
@@ -76,6 +81,7 @@ public class PlayerInteractListener implements Listener {
                                 cp.addStructure(baseStructure);
                             }
                             else{
+                                Bukkit.broadcastMessage(cp.getVillageState().toString());
                                 cp.getPlayer().sendMessage("Structure cannot be placed");
                             }
                         }
@@ -83,8 +89,22 @@ public class PlayerInteractListener implements Listener {
                     break;
             }
         }
+    }
 
 
+    private void tryToOpenStructureEditMode(PlayerInteractEvent event){
+        ClashPlayer cp = ClashPlayer.loadClashPlayer(plugin, event.getPlayer());
+        if (cp == null || event.getClickedBlock() == null)
+            return;
 
+        Structure s = cp.getStructureWithLocation(event.getClickedBlock().getLocation());
+
+        if (s == null){
+            cp.getPlayer().sendMessage("You have to click on a building to open editing menu");
+            return;
+        }
+
+        MenuInventory structureEditMenu = new MenuInventory(plugin, s.getName());
+        structureEditMenu.openInventory(cp.getPlayer());
     }
 }
