@@ -57,11 +57,10 @@ public class PlayerInteractListener implements Listener {
                         if (cp != null){
                             if (cp.canPlaceStructure(STRUCTURES.HOUSE)){
                                 Structure baseStructure = new Structure("HOUSE", STRUCTURES.HOUSE);
-                                baseStructure.build(event.getPlayer());
+                                baseStructure.build(event.getPlayer().getLocation());
                                 cp.addStructure(baseStructure);
                             }
                             else{
-                                Bukkit.broadcastMessage(cp.getVillageState().toString());
                                 cp.getPlayer().sendMessage("Structure cannot be placed");
                             }
                         }
@@ -77,11 +76,10 @@ public class PlayerInteractListener implements Listener {
                         if (cp != null){
                             if (cp.canPlaceStructure(STRUCTURES.MINE)){
                                 Structure baseStructure = new Structure("MINE", STRUCTURES.MINE);
-                                baseStructure.build(event.getPlayer());
+                                baseStructure.build(event.getPlayer().getLocation());
                                 cp.addStructure(baseStructure);
                             }
                             else{
-                                Bukkit.broadcastMessage(cp.getVillageState().toString());
                                 cp.getPlayer().sendMessage("Structure cannot be placed");
                             }
                         }

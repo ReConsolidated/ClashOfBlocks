@@ -77,7 +77,7 @@ public class MenuInventory implements Listener {
 
         final Player player = (Player) e.getWhoClicked();
 
-        ClashPlayer cp = ClashPlayer.loadClashPlayer(plugin, player);
+        ClashPlayer cp = plugin.getClashPlayer(player);
 
         // Using slots click is a best option for your inventory click's
         switch (e.getRawSlot()){
@@ -85,14 +85,21 @@ public class MenuInventory implements Listener {
                 if (cp.getVillageState().getStructureByName(structureName) != null){
                     cp.getVillageState().removeStructureByName(structureName, player);
                     cp.saveClashPlayer();
-                    Bukkit.broadcastMessage("§b" + cp.getVillageState().toString());
+                }
+                else{
+                    Log.error("ClashPlayer doesn't exist or structure: " + structureName + " doesnt exist.");
+                }
+                break;
+            case 1:
+                if (cp.getVillageState().getStructureByName(structureName) != null){
+                    cp.levelUpStructureByName(structureName);
+                    cp.saveClashPlayer();
                 }
                 else{
                     Log.error("ClashPlayer doesn't exist or structure: " + structureName + " doesnt exist.");
                 }
                 break;
         }
-        player.sendMessage("You clicked at slot " + e.getRawSlot());
         player.closeInventory();
     }
 

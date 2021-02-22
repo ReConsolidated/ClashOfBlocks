@@ -109,6 +109,14 @@ public class ClashPlayer {
         return this.villageState;
     }
 
+    public void levelUpStructureByName(String structureName){
+        Structure structure = villageState.getStructureByName(structureName);
+        structure.destroy(player);
+        structure.setLevel(structure.getLevel() + 1);
+        structure.build(structure.getLocation());
+
+    }
+
     @Override
     public String toString(){
         return "Player UUID: " + player.getUniqueId() + ", " + villageState.toString();

@@ -47,18 +47,23 @@ public class Structure implements ConfigurationSerializable  {
     private Location pos2;
     private STRUCTURES type;
     private Location location;
+    private Location topLeftLocation;
+    private int level;
 
     public Structure(String name, STRUCTURES type){
         this.name = name;
         this.type = type;
+        this.level = 1;
     }
 
-    public Structure(String name, Location pos1, Location pos2, STRUCTURES type, Location location){
+    public Structure(String name, Location pos1, Location pos2, STRUCTURES type, Location location, Location topLeftLocation, int level){
         this.name = name;
         this.pos1 = pos1;
         this.pos2 = pos2;
         this.type = type;
         this.location = location;
+        this.topLeftLocation = topLeftLocation;
+        this.level = level;
     }
 
     public static int getStructureSizeX(STRUCTURES structure){
@@ -92,7 +97,7 @@ public class Structure implements ConfigurationSerializable  {
     }
 
     public boolean isOverridingStructure(STRUCTURES otherStructure, Location location){
-        Location topLeft1 = this.getLocation();
+        Location topLeft1 = this.topLeftLocation;
         Location bottomRight1 = topLeft1.clone().add(getStructureSizeX(this.type)-1, 0, getStructureSizeZ(this.type)-1);
 
         double a1 = location.getDirection().angle(new Vector(0, 0, -1)); // 270
@@ -138,7 +143,14 @@ public class Structure implements ConfigurationSerializable  {
 
     public Location getLocation(){
         return this.location;
+    }
 
+    public int getLevel(){
+        return this.level;
+    }
+
+    public void setLevel(int level){
+        this.level = level;
     }
 
     public void destroy(Player player){
@@ -162,11 +174,10 @@ public class Structure implements ConfigurationSerializable  {
         }
     }
 
-    private Clipboard loadSchematic(Player player){
-        Location location = player.getLocation();
+    private Clipboard loadSchematic(){
         if (Bukkit.getPluginManager().getPlugin("WorldEdit") != null){
             WorldEditPlugin worldEditPlugin = (WorldEditPlugin) Bukkit.getPluginManager().getPlugin("WorldEdit");
-            File schematic = new File(worldEditPlugin.getDataFolder() + File.separator + "/schematics/" + name + ".schem");
+            File schematic = new File(worldEditPlugin.getDataFolder() + File.separator + "/schematics/" + name + Integer.toString(this.level) + ".schem");
             try{
                 ClipboardFormat format = ClipboardFormats.findByFile(schematic);
                 ClipboardReader reader = format.getReader(new FileInputStream(schematic));
@@ -177,14 +188,14 @@ public class Structure implements ConfigurationSerializable  {
             }
         }
         else{
-            player.sendMessage(ChatColor.RED + "WorldEdit is not installed on this server, couldn't load schematic");
+            Bukkit.broadcastMessage(ChatColor.RED + "WorldEdit is not installed on this server, couldn't load schematic");
         }
         return null;
 
     }
 
     public boolean containsLocation(Location location){
-        Location topLeft1 = this.getLocation();
+        Location topLeft1 = this.topLeftLocation;
         Location bottomRight1 = topLeft1.clone().add(getStructureSizeX(this.type)-1, 0, getStructureSizeZ(this.type)-1);
         if (location.getBlockX() < topLeft1.getBlockX() || bottomRight1.getBlockX() < location.getBlockX()){
             return false;
@@ -195,11 +206,10 @@ public class Structure implements ConfigurationSerializable  {
         return true;
     }
 
-    public void build(Player player) {
-
-        World world = new BukkitWorld(player.getWorld());
+    public void build(Location buildLocation) {
+        World world = new BukkitWorld(buildLocation.getWorld());
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(world)) {
-            Clipboard cb = loadSchematic(player);
+            Clipboard cb = loadSchematic();
             if (cb == null){
                 Bukkit.broadcastMessage("Couldn't load schematic. Contact the admin of the server.");
                 return;
@@ -207,10 +217,10 @@ public class Structure implements ConfigurationSerializable  {
             ClipboardHolder cph = new ClipboardHolder(cb);
             Transform transform = new AffineTransform();
 
-            double a1 = player.getLocation().getDirection().angle(new Vector(0, 0, -1)); // 270
-            double a2 = player.getLocation().getDirection().angle(new Vector(1, 0, 0)); // 180
-            double a3 = player.getLocation().getDirection().angle(new Vector(0, 0, 1)); // 90
-            double a4 = player.getLocation().getDirection().angle(new Vector(-1, 0, 0)); // 360
+            double a1 = buildLocation.getDirection().angle(new Vector(0, 0, -1)); // 270
+            double a2 = buildLocation.getDirection().angle(new Vector(1, 0, 0)); // 180
+            double a3 = buildLocation.getDirection().angle(new Vector(0, 0, 1)); // 90
+            double a4 = buildLocation.getDirection().angle(new Vector(-1, 0, 0)); // 360
 
             double smallest = Math.min(a1, Math.min(a2, Math.min(a3, a4)));
 
@@ -227,7 +237,7 @@ public class Structure implements ConfigurationSerializable  {
             cph.setTransform(transform);
             Operation operation = cph
                     .createPaste(editSession)
-                    .to(BlockVector3.at(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ()))
+                    .to(BlockVector3.at(buildLocation.getX(), buildLocation.getY(), buildLocation.getZ()))
                     .ignoreAirBlocks(false)
                     .build();
 
@@ -235,9 +245,9 @@ public class Structure implements ConfigurationSerializable  {
             BlockVector3 origin = cph.getClipboard().getOrigin();
 
             region.shift(BlockVector3.at(
-                    player.getLocation().getX() - origin.getX(),
-                    player.getLocation().getY() - origin.getY(),
-                    player.getLocation().getZ() - origin.getZ()));
+                    buildLocation.getX() - origin.getX(),
+                    buildLocation.getY() - origin.getY(),
+                    buildLocation.getZ() - origin.getZ()));
 
 
             BlockVector3 b1 = region.getBoundingBox().getPos1();
@@ -245,30 +255,27 @@ public class Structure implements ConfigurationSerializable  {
 
 
             if (smallest == a1) { // 90 degrees
-                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 0.5);
-                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 0.5);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), buildLocation.getX(), buildLocation.getZ(), Math.PI * 0.5);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), buildLocation.getX(), buildLocation.getZ(), Math.PI * 0.5);
             }
             if (smallest == a2){ // 180 degrees
-                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 1);
-                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * 1);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), buildLocation.getX(), buildLocation.getZ(), Math.PI * 1);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), buildLocation.getX(), buildLocation.getZ(), Math.PI * 1);
             }
             if (smallest == a3){ // 270 degrees
-                b1 = rotatePointAround(region.getBoundingBox().getPos1(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * -0.5);
-                b2 = rotatePointAround(region.getBoundingBox().getPos2(), player.getLocation().getX(), player.getLocation().getZ(), Math.PI * -0.5);
+                b1 = rotatePointAround(region.getBoundingBox().getPos1(), buildLocation.getX(), buildLocation.getZ(), Math.PI * -0.5);
+                b2 = rotatePointAround(region.getBoundingBox().getPos2(), buildLocation.getX(), buildLocation.getZ(), Math.PI * -0.5);
             }
 
             pos1 = new Location((org.bukkit.World) region.getWorld(), b1.getX(), b1.getY(), b1.getZ());
             pos2 = new Location((org.bukkit.World) region.getWorld(), b2.getX(), b2.getY(), b2.getZ());
 
 
-            Bukkit.broadcastMessage(pos1.toString());
-            Bukkit.broadcastMessage(pos2.toString());
-
             int minX =(int) Math.min(pos1.getX(), pos2.getX());
             int minZ =(int) Math.min(pos1.getZ(), pos2.getZ());
 
-            location = new Location((org.bukkit.World) region.getWorld(),  minX, pos1.getY(), minZ);
-
+            this.topLeftLocation = new Location((org.bukkit.World) region.getWorld(),  minX, pos1.getY(), minZ);
+            this.location = buildLocation;
             Operations.complete(operation);
         } catch (WorldEditException e) {
             e.printStackTrace();
@@ -302,6 +309,8 @@ public class Structure implements ConfigurationSerializable  {
         map.put("pos2", pos2);
         map.put("type", type.toString());
         map.put("location", location);
+        map.put("topLeftLocation", topLeftLocation);
+        map.put("level", level);
         return map;
     }
 
@@ -312,6 +321,8 @@ public class Structure implements ConfigurationSerializable  {
                 (Location)map.get("pos1"),
                 (Location)map.get("pos2"),
                 type,
-                (Location)map.get("location"));
+                (Location)map.get("location"),
+                (Location)map.get("topLeftLocation"),
+                (int)map.get("level"));
     }
 }
