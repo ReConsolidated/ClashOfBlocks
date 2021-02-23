@@ -35,10 +35,8 @@ public class PathfinderGoalNearestEnemyTarget extends PathfinderGoalNearestAttac
 
             if (this.a == CustomZombie.class && this.c != null){
                 if (this.c instanceof CustomZombie){
-
                     CustomZombie targetZombie = (CustomZombie) this.c;
                     if (targetZombie.getOwner().getName().equalsIgnoreCase(ownerName)){
-                        Bukkit.broadcastMessage(this.c.toString());
                         this.c = null;
                     }
                 }
@@ -46,6 +44,7 @@ public class PathfinderGoalNearestEnemyTarget extends PathfinderGoalNearestAttac
 
         } else {
             this.c = this.e.world.a(this.d, this.e, this.e.locX(), this.e.getHeadY(), this.e.locZ());
+
         }
 
     }

@@ -7,8 +7,12 @@ commands:
     description: ClashOfBlocks help command.
     permission: ClashOfBlocks
     permission-message: You don't have <permission>
-  spawnzombie:
-    description: ClashOfBlocks spawn zombie.
+  start:
+    description: ClashOfBlocks start a fight.
+    permission: ClashOfBlocks
+    permission-message: You don't have <permission>
+  killz:
+    description: ClashOfBlocks kill all custom zombies.
     permission: ClashOfBlocks
     permission-message: You don't have <permission>
   spawnnpc:

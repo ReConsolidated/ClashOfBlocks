@@ -6,9 +6,11 @@ import io.github.reconsolidated.clashofblocks.Utils.ConfigFileManagement;
 import io.github.reconsolidated.clashofblocks.Village.STRUCTURES;
 import io.github.reconsolidated.clashofblocks.Village.Structure;
 
+import io.github.reconsolidated.clashofblocks.customzombie.MovableByPlayer;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -18,6 +20,8 @@ public class ClashPlayer {
     private ClashOfBlocks plugin;
     private Player player;
     private Location villageLocation;
+
+    private MovableByPlayer currentlyMovedMob = null;
 
     private ClashVillageState villageState;
 
@@ -35,7 +39,8 @@ public class ClashPlayer {
         this.villageState = new ClashVillageState(villageLocation.clone().add(10, 0, 0));
 
         player.teleport(villageLocation);
-        new Structure("Village", STRUCTURES.VILLAGE);
+        Structure village = new Structure("Village", STRUCTURES.VILLAGE);
+        village.build(player.getLocation());
 
         saveClashPlayer();
     }
@@ -47,6 +52,14 @@ public class ClashPlayer {
         this.villageState = villageState;
 
         saveClashPlayer();
+    }
+
+    public void setCurrentlyMovedMob(MovableByPlayer mob){
+        this.currentlyMovedMob = mob;
+    }
+
+    public MovableByPlayer getCurrentlyMovedMob(){
+        return this.currentlyMovedMob;
     }
 
     public Structure getStructureWithLocation(Location location){

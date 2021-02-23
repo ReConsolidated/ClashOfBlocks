@@ -2,12 +2,17 @@ package io.github.reconsolidated.clashofblocks.Listeners;
 
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
 import io.github.reconsolidated.clashofblocks.ClashPlayer.ClashPlayer;
+import io.github.reconsolidated.clashofblocks.customzombie.CustomZombie;
+import io.github.reconsolidated.clashofblocks.customzombie.MovableByPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+
+import java.util.ArrayList;
 
 public class PlayerInteractEntityListener implements Listener {
     private ClashOfBlocks plugin;
@@ -19,25 +24,25 @@ public class PlayerInteractEntityListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof ItemFrame){
-            ItemFrame frame = (ItemFrame) event.getRightClicked();
-            ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
-            switch (frame.getItem().getType()){
-                case CLOCK:
-                    if (cp != null && cp.getVillageState().getStructureByName("HOUSE") != null){
-                        cp.getVillageState().removeStructureByName("HOUSE", event.getPlayer());
-                        cp.saveClashPlayer();
+        event.getPlayer().sendMessage("PlayerInteractEntityEvent fired");
+        switch(event.getPlayer().getInventory().getItemInMainHand().getType()){
+            case BLAZE_ROD:
+                ArrayList<CustomZombie> zombies = plugin.getZombies();
+                CustomZombie clickedZombie = null;
+                for (int i = 0; i<zombies.size(); i++){
+                    if (zombies.get(i).getUniqueID().equals(event.getRightClicked().getUniqueId())){
+                        clickedZombie = zombies.get(i);
                     }
-                    break;
-                case IRON_PICKAXE:
-                    if (cp != null && cp.getVillageState().getStructureByName("MINE") != null){
-                        cp.getVillageState().removeStructureByName("MINE", event.getPlayer());
-                        cp.saveClashPlayer();
-                    }
-                    break;
-            }
+                }
 
-            frame.remove();
+                if (clickedZombie != null){
+                    ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
+                    cp.setCurrentlyMovedMob(clickedZombie);
+                    cp.getPlayer().sendMessage("Setting current mob.");
+                }
+                break;
         }
+
+
     }
 }

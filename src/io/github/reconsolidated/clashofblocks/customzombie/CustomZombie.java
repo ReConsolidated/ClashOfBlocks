@@ -9,11 +9,13 @@ import java.util.Map;
 
 import static io.github.reconsolidated.clashofblocks.Utils.Utils.getPrivateField;
 
-public class CustomZombie extends EntityZombie
+public class CustomZombie extends EntityZombie implements MovableByPlayer
 {
+
     private org.bukkit.World world2;
     private Location currentDestiny;
     private Player owner;
+    private boolean isReadyToFight = false;
 
     public CustomZombie(org.bukkit.World world, Player player)
     {
@@ -27,6 +29,14 @@ public class CustomZombie extends EntityZombie
 
     public void setCurrentDestiny(Location location){
         this.currentDestiny = location;
+    }
+
+    public void setIsReadyToFight(boolean isReady){
+        this.isReadyToFight = isReady;
+    }
+
+    public boolean isReadyToFight(){
+        return this.isReadyToFight;
     }
 
     public Location getCurrentDestiny(){
@@ -49,19 +59,26 @@ public class CustomZombie extends EntityZombie
 
     @Override
     protected void m() {
+        //PathfinderGoalNearestEnemyTarget is for choosing a target from enemy team
         this.targetSelector.a(1, new PathfinderGoalNearestEnemyTarget(this, CustomZombie.class, true, this.owner.getName()));
+        //PathfinderGoalZombieAttack enables zombies to walk towards their target
         this.goalSelector.a(2, new PathfinderGoalZombieAttack(this, 1.0D, false));
-        this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityIronGolem.class, true));
-        this.goalSelector.a(6, new PathfinderGoalMoveThroughVillage(this, 1.0D, true, 4, this::eU));
+  //      this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityIronGolem.class, true));
+  //      this.goalSelector.a(6, new PathfinderGoalMoveThroughVillage(this, 1.0D, true, 4, this::eU));
         this.goalSelector.a(7, new PathfinderGoalWalkToLoc(this, currentDestiny, 2));
   //      this.goalSelector.a(7, new PathfinderGoalRandomStrollLand(this, 1.0D));
-        this.targetSelector.a(4, (new PathfinderGoalHurtByTarget(this, new Class[0])).a(new Class[]{EntityPigZombie.class}));
-        if (this.world.spigotConfig.zombieAggressiveTowardsVillager) {
-            this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityVillagerAbstract.class, false));
-        }
+  //      this.targetSelector.a(4, (new PathfinderGoalHurtByTarget(this, new Class[0])).a(new Class[]{EntityPigZombie.class}));
+//        if (this.world.spigotConfig.zombieAggressiveTowardsVillager) {
+//            this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityVillagerAbstract.class, false));
+//        }
 
 
 //
+    }
+
+    @Override
+    public void setDestination(Location location) {
+        currentDestiny = location;
     }
 
     public enum EntityTypes

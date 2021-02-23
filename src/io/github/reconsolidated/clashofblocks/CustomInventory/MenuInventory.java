@@ -3,6 +3,7 @@ package io.github.reconsolidated.clashofblocks.CustomInventory;
 import io.github.reconsolidated.clashofblocks.ClashOfBlocks;
 import io.github.reconsolidated.clashofblocks.ClashPlayer.ClashPlayer;
 import io.github.reconsolidated.clashofblocks.Village.STRUCTURES;
+import io.github.reconsolidated.clashofblocks.Village.Structure;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
@@ -38,12 +39,12 @@ public class MenuInventory implements Listener {
 
     // You can call this whenever you want to put the items in
     public void initializeItems() {
-        inv.addItem(createGuiItem(Material.BAT_SPAWN_EGG, "Pick up building", "§aPick up this building to move it somewhere else", "§bMake sure you have space in your inventory"));
-        inv.addItem(createGuiItem(Material.BONE_MEAL, "§bLevel up building", "§aCost: 100 wood, 100 grypciocoins", "§bLeveling up a building makes it better POG"));
+        inv.addItem(createCustomItem(Material.BAT_SPAWN_EGG, "Pick up building", "§aPick up this building to move it somewhere else", "§bMake sure you have space in your inventory"));
+        inv.addItem(createCustomItem(Material.BONE_MEAL, "§bLevel up building", "§aCost: 100 wood, 100 grypciocoins", "§bLeveling up a building makes it better POG"));
     }
 
     // Nice little method to create a gui item with a custom name, and description
-    protected ItemStack createGuiItem(final Material material, final String name, final String... lore) {
+    public static ItemStack createCustomItem(final Material material, final String name, final String... lore) {
         final ItemStack item = new ItemStack(material, 1);
         final ItemMeta meta = item.getItemMeta();
 
@@ -54,7 +55,6 @@ public class MenuInventory implements Listener {
         meta.setLore(Arrays.asList(lore));
 
         item.setItemMeta(meta);
-
         return item;
     }
 
@@ -82,9 +82,17 @@ public class MenuInventory implements Listener {
         // Using slots click is a best option for your inventory click's
         switch (e.getRawSlot()){
             case 0:
-                if (cp.getVillageState().getStructureByName(structureName) != null){
+                Structure s = cp.getVillageState().getStructureByName(structureName);
+                if (s != null){
                     cp.getVillageState().removeStructureByName(structureName, player);
                     cp.saveClashPlayer();
+                    cp.getPlayer().getInventory().addItem(createCustomItem(
+                            Material.CLOCK,
+                            s.getName() + " lvl " + Integer.toString(s.getLevel()),
+                            "Use this item to create a " + s.getName() + " in front of you.",
+                            "ID0001",
+                            "LVL" + s.getLevel()
+                    ));
                 }
                 else{
                     Log.error("ClashPlayer doesn't exist or structure: " + structureName + " doesnt exist.");

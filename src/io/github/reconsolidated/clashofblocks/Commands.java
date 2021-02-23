@@ -12,7 +12,8 @@ public class Commands implements CommandExecutor {
     public Commands(ClashOfBlocks plugin) {
         this.plugin = plugin;
         Bukkit.getServer().getPluginCommand("help").setExecutor(this);
-        Bukkit.getServer().getPluginCommand("spawnzombie").setExecutor(this);
+        Bukkit.getServer().getPluginCommand("start").setExecutor(this);
+        Bukkit.getServer().getPluginCommand("killz").setExecutor(this);
         Bukkit.getServer().getPluginCommand("spawnnpc").setExecutor(this);
         Bukkit.getServer().getPluginCommand("movezombies").setExecutor(this);
         Bukkit.getServer().getPluginCommand("clearzombiesmove").setExecutor(this);
@@ -32,12 +33,16 @@ public class Commands implements CommandExecutor {
             plugin.showClashPlayers();
         }
 
-        if (commandName.equals("spawnzombie")){
-            sender.sendMessage("Spawning a zombie...");
-            Player player = (Player) sender;
-            plugin.spawnZombie(player, player.getLocation());
-
+        if (commandName.equals("start")){
+            sender.sendMessage("Starting the fight!");
+            plugin.readyAllZombies();
         }
+
+        if (commandName.equals("killz")){
+            sender.sendMessage("Killing all custom zombies");
+            plugin.killAllZombies();
+        }
+
         if (commandName.equals("spawnnpc")){
             sender.sendMessage("Spawning an npc...");
             Player player = (Player) sender;

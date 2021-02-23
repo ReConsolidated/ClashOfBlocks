@@ -70,6 +70,24 @@ public class ClashOfBlocks extends JavaPlugin implements Listener {
         }
         return null;
     }
+
+    public ArrayList<CustomZombie> getZombies(){
+        return this.zombies;
+    }
+
+    public void killAllZombies(){
+        for (int i = 0; i<zombies.size();){
+            zombies.get(i).killEntity();
+            zombies.remove(i);
+        }
+    }
+
+    public void readyAllZombies(){
+        for (int i = 0; i<zombies.size(); i++){
+            zombies.get(i).setIsReadyToFight(true);
+        }
+    }
+
     public void moveAllZombiesToLocation(Location location){
         for (int i = 0; i<zombies.size(); i++){
             zombies.get(i).setCurrentDestiny(location);

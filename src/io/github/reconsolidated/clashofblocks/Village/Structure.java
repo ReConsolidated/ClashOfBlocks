@@ -56,6 +56,12 @@ public class Structure implements ConfigurationSerializable  {
         this.level = 1;
     }
 
+    public Structure(String name, STRUCTURES type, int level){
+        this.name = name;
+        this.type = type;
+        this.level = level;
+    }
+
     public Structure(String name, Location pos1, Location pos2, STRUCTURES type, Location location, Location topLeftLocation, int level){
         this.name = name;
         this.pos1 = pos1;
@@ -70,7 +76,7 @@ public class Structure implements ConfigurationSerializable  {
         // TODO STRUCTURES sizes from file
         switch (structure){
             case HOUSE:
-                return 9;
+                return 11;
             case MINE:
                 return 11;
             default:
@@ -83,7 +89,7 @@ public class Structure implements ConfigurationSerializable  {
         // TODO STRUCTURES sizes from file
         switch (structure){
             case HOUSE:
-                return 9;
+                return 11;
             case MINE:
                 return 11;
             default:
