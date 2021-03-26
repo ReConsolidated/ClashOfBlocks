@@ -23,8 +23,7 @@ public class CustomZombie extends EntityZombie implements MovableByPlayer
         setOwner(player);
         this.world2 = world;
         this.m();
-
-
+        this.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(256.0D);
     }
 
     public void setCurrentDestiny(Location location){
@@ -71,10 +70,8 @@ public class CustomZombie extends EntityZombie implements MovableByPlayer
 //        if (this.world.spigotConfig.zombieAggressiveTowardsVillager) {
 //            this.targetSelector.a(3, new PathfinderGoalNearestAttackableTarget(this, EntityVillagerAbstract.class, false));
 //        }
-
-
-//
     }
+
 
     @Override
     public void setDestination(Location location) {
@@ -105,7 +102,8 @@ public class CustomZombie extends EntityZombie implements MovableByPlayer
             ((Map)getPrivateField("d", net.minecraft.server.v1_16_R2.EntityTypes.class, null)).put(clazz, name);
             //((Map)getPrivateField("e", net.minecraft.server.v1_7_R4.EntityTypes.class, null)).put(Integer.valueOf(id), clazz);
             ((Map)getPrivateField("f", net.minecraft.server.v1_16_R2.EntityTypes.class, null)).put(clazz, Integer.valueOf(id));
-            //((Map)getPrivateField("g", net.minecraft.server.v1_7_R4.EntityTypes.class, null)).put(name, Integer.valueOf(id));
+            //((Map)
+            // getPrivateField("g", net.minecraft.server.v1_7_R4.EntityTypes.class, null)).put(name, Integer.valueOf(id));
         }
     }
 }

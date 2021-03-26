@@ -48,6 +48,7 @@ public class ClashOfBlocks extends JavaPlugin implements Listener {
         new PlayerJoinListener(this);
         new PlayerInteractEntityListener(this);
         new PlayerMoveListener(this);
+        new ChunkUnloadListener(this);
 
     }
 

@@ -157,7 +157,7 @@ public class PlayerInteractListener implements Listener {
     private void useBlazeRod(PlayerInteractEvent event){
 
         ClashPlayer cp = plugin.getClashPlayer(event.getPlayer());
-        if (cp.getCurrentlyMovedMob() != null){
+        if (cp.getCurrentlyMovedMob() != null && event.getClickedBlock() != null){
             Location loc = event.getClickedBlock().getLocation().clone().add(0,1,0);
             event.getPlayer().sendMessage("Setting mob destination to: " + loc.toString());
             cp.getCurrentlyMovedMob().setDestination(loc);
